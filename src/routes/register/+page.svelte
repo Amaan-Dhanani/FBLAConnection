@@ -1,117 +1,105 @@
 <script lang="ts">
+	import { Error, Input, TextRedactor, CodeInput, Dropdown } from '$lib/components';
+	import { Flex, Frame, Button, Header, Text } from 'sk-clib';
+	import Logo from '$lib/images/Logo.png';
 	import { enhance } from '$app/forms';
-	import type { ActionData } from './$types';
-	import '$lib/css/app.css';
-	import { Input } from '$lib/components';
-	export let form: ActionData;
-	import { Logo } from '$lib/components';
+	import { goto } from '$app/navigation';
+
+	import { superForm } from 'sveltekit-superforms/client';
+	import type { PageData, ActionData } from './$types';
+	import { registerSchema } from '$lib/validation';
+	import { zod4 } from 'sveltekit-superforms/adapters';
+
+	let { data, form: codeForm }: { data: PageData; form: ActionData } = $props();
+
+	let showSecondForm = $state(false);
+	let returnedEmail = $state('');
+
+	const {
+		form,
+		enhance: formEnhance,
+		errors
+		} = superForm(data.form, {
+		validators: zod4(registerSchema),
+		applyAction: false,
+		onResult({ result }) {
+			if (result.type === 'success' && result.data) {
+				showSecondForm = true;
+				returnedEmail = result.data.form.data.email; //Get email from successful registration step
+			}
+		}
+	});
 </script>
-<!-- Full screen container -->
-<div
-	class="fixed inset-0 -z-[100] mt-[100vh] h-[300vh] w-screen overflow-hidden bg-[#F0F0F2] dark:bg-[#1F1F39]"
-></div>
-<div class="flex min-h-screen flex-col bg-[#F0F0F2] dark:bg-[#1F1F39] ml-[1rem] mr-[1rem]">
-	<!-- Header -->
-	 <Logo/>
-	<h1 class="mb-0 ml-[5px] pt-[86px] text-[32px] font-bold dark:text-white">Get Started</h1>
-	<p class="mt-0 mb-[10px] ml-[5px] text-[12px] text-[#B8B8D2]">
-		Enter your details below to start your journey!
-	</p>
 
-	<!-- Form Section -->
-	<form
-		method="POST"
-		autocomplete="off"
-		use:enhance
-		class="box-border flex flex-grow flex-col gap-4 rounded-t-2xl bg-white px-6 py-8 dark:bg-[#2F2F42]"
-	>
-		<div>
-			<Input
-				type="text"
-				id="name_input"
-				name="name"
-				label="Name"
-				value={form?.user?.name ?? ''}
-				class=""
-			/>
-		</div>
-		<div>
-			<Input
-				type="email"
-				id="email_input"
-				name="email"
-				label="Email"
-				value={form?.user?.email ?? ''}
-			/>
-		</div>
-		<div>
-			<Input type="password" class="mb-[12px]" id="password_input" label="Password" name="password" />
-		</div>
+<Flex col fill class="mt-20">
+	<Header bold class="ml-4 !text-3xl sm:ml-0 text-on-surface">Sign Up</Header>
+	<Text lg class="ml-4 opacity-80 sm:ml-0 text-on-surface">Enter your details below to start your journey!</Text>
+	<Flex col fill class="bg-surface-variant mt-2 box-border rounded-t-2xl p-6">
+		<Flex row fill>
+			{#if !showSecondForm}
+				<form method="POST" action="?/register" autocomplete="off" class="box-border flex size-full flex-col" use:formEnhance>
+					<Text class="text-secondary !text-[14px]">Type</Text>
+					<Dropdown.Menu class="mb-4">
+						<Dropdown.Trigger>
+							<Button class="bg-secondary hover:text-white dark:hover:text-black cursor-pointer block px-4 py-2 text-sm text-gray-700 w-full text-left" form="">{$form.type || 'Select an Option'}</Button>
+						</Dropdown.Trigger>
+						<Dropdown.Content>
+							<Dropdown.Button
+								onclick={() => {
+									$form.type = 'Account Type 1';
+								}}>Account Type 1</Dropdown.Button
+							>
+							<Dropdown.Divider />
+							<Dropdown.Button
+								onclick={() => {
+									$form.type = 'Account Type 2';
+								}}>Account Type 2</Dropdown.Button
+							>
+						</Dropdown.Content>
+					</Dropdown.Menu>
+					<Input type="hidden" name="type" bind:value={$form.type} />
 
-		<!-- Submit Button -->
-		<button
-			class="h-12 w-full rounded-xl bg-[#3d5cff] text-center text-white hover:cursor-pointer"
-		>
-			Register
-		</button>
+					<Input type="text" class="mb-4" name="email" label="Email" bind:value={$form.email} />
+					<Input type="password" class="mb-7" label="Password" name="password" bind:value={$form.password} />
 
-		<!-- Sign In Link -->
-		<p class="text-center text-[14px] text-[#858597]">
-			Already have an account? <a class="font-bold text-[#3D5CFF] underline" href="/login">Sign In</a
-			>
-		</p>
-		<div class="mt-10 flex flex-col text-center justify-center items-center">
-			<!-- Optional messages -->
-			{#if form?.message}
-				<div
-					id="toast-success"
-					class="mb-4 flex w-full max-w-xs items-center rounded-lg bg-[#F0F0F2] p-4 text-gray-500 shadow-sm dark:bg-gray-800 dark:text-gray-400"
-					role="alert"
-				>
-					<div
-						class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-500 dark:bg-green-800 dark:text-green-200"
-					>
-						<svg
-							class="h-5 w-5"
-							aria-hidden="true"
-							xmlns="http://www.w3.org/2000/svg"
-							fill="currentColor"
-							viewBox="0 0 20 20"
-						>
-							<path
-								d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 8.207-4 4a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L9 10.586l3.293-3.293a1 1 0 0 1 1.414 1.414Z"
-							/>
-						</svg>
-						<span class="sr-only">Check icon</span>
-					</div>
-					<div class="ms-3 text-sm">{form.message}</div>
-				</div>
+					<Button class="bg-seed mb-4 h-12 w-full cursor-pointer rounded-xl text-white">Register</Button>
+
+					<Flex row center class="gap-2">
+						<Text lg class="text-on-surface">Already have an account?</Text>
+						<a href="/login" class="text-primary font-bold underline">Sign In</a>
+					</Flex>
+				</form>
 			{/if}
-			{#if form?.error}
-				<div
-					id="toast-danger"
-					class="mb-4 flex w-full max-w-xs items-center rounded-lg bg-[#F0F0F2] p-4 text-gray-500 shadow-sm dark:bg-gray-800 dark:text-gray-400"
-					role="alert"
-				>
-					<div
-						class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-500 dark:bg-red-800 dark:text-red-200"
-					>
-						<svg
-							class="h-5 w-5"
-							aria-hidden="true"
-							xmlns="http://www.w3.org/2000/svg"
-							fill="currentColor"
-							viewBox="0 0 20 20"
-						>
-							<path
-								d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5Zm3.707 11.793a1 1 0 1 1-1.414 1.414L10 11.414l-2.293 2.293a1 1 0 0 1-1.414-1.414L8.586 10 6.293 7.707a1 1 0 0 1 1.414-1.414L10 8.586l2.293-2.293a1 1 0 0 1 1.414 1.414L11.414 10l2.293 2.293Z"
-							/>
-						</svg>
-						<span class="sr-only">Error icon</span>
-					</div>
-					<div class="ms-3 text-sm">{form.error}</div>
-				</div>
+
+			{#if showSecondForm && !codeForm?.go_back_btn}
+				<form method="POST" action="?/code" class="box-border flex size-full flex-col gap-4 text-on-surface" use:enhance>
+					<Text bold class="text-center">Verify Code</Text>
+					<Text class="text-center text-sm">
+						We just emailed a verification code to <TextRedactor class="text-primary" text={returnedEmail} />. Please check your inbox. If you don’t
+						see it, check your spam folder. The code expires in 10 minutes. If it expires, you will need to refresh the page and start the
+						registration process again.
+					</Text>
+					<CodeInput classWrapper="pb-[3px]" name="code" />
+					<Button class="bg-seed mx-auto mb-4 h-10 w-fit cursor-pointer text-white">Verify</Button>
+				</form>
 			{/if}
-		</div>
-	</form>
-</div>
+
+			{#if codeForm?.go_back_btn}
+				<Error big error={codeForm?.error} onclick={() => goto('/')} btnText="Back to Home" class="" />
+			{/if}
+
+			<Frame class="mt-[8%] hidden lg:ml-4 lg:block lg:w-full">
+				<img src={Logo} alt="Logo" />
+			</Frame>
+		</Flex>
+
+		<Error duration={3000} error={$errors.email} />
+		<Error duration={3000} error={$errors.password} />
+		<Error duration={3000} error={$errors.type} />
+		{#if !codeForm?.go_back_btn}
+			<Error duration={3000} error={codeForm?.error} />
+		{/if}
+
+		<img src={Logo} alt="Logo" class="block w-full object-contain lg:hidden" />
+	</Flex>
+</Flex>
