@@ -1,12 +1,12 @@
 import bcrypt from "bcrypt";
 import { generate_code_and_ttl, sendEmail } from "./utils";
-import { read } from '$app/server';
 import type { Cookies } from "@sveltejs/kit";
 import { ChangeCreds_Model, User_Model } from "./models";
 import jwt from "jsonwebtoken";
 import { SECRET_JWT_KEY } from "$env/static/private";
 import { deleteUser } from "./deleteUser";
 import { redirect } from "@sveltejs/kit";
+import { cookie_options } from "./utils";
 
 const textTemplate = `
 Use the code below to complete your request:
@@ -136,12 +136,7 @@ export async function create_request(
         cookies.set(
             "verify_email",
             jwt.sign({ email }, SECRET_JWT_KEY),
-            {
-                httpOnly: true,
-                secure: true,
-                sameSite: "strict",
-                path: "/",
-            }
+            cookie_options
         );
 
         return { error: "" };

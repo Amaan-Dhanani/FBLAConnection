@@ -5,7 +5,8 @@ export const cookie_options = {
     httpOnly: true,
     secure: true,
     path: "/",
-    maxAge: 86400,
+    maxAge: 86400, 
+    sameSite: 'none' 
 } as const;
 
 export function generate_code_and_ttl(): { code: number; ttl: Date } {

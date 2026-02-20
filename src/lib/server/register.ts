@@ -1,10 +1,10 @@
 import bcrypt from "bcrypt";
 import { generate_code_and_ttl, sendEmail } from "./utils";
-import path from 'node:path';
 import type { Cookies } from "@sveltejs/kit";
 import { User_Model } from "./models";
 import jwt from "jsonwebtoken";
 import { SECRET_JWT_KEY } from "$env/static/private";
+import { cookie_options } from "./utils";
 
 const textTemplate = `
 Hello, use the code to complete your registration:
@@ -97,12 +97,7 @@ export async function create_user(
 		cookies.set(
 			"verify_email",
 			jwt.sign({ email }, SECRET_JWT_KEY),
-			{
-				httpOnly: true,
-				secure: true,
-				sameSite: "strict",
-				path: "/",
-			}
+			cookie_options
 		);
 
 		return { error: "" };
